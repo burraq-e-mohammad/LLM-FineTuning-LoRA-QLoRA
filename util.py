@@ -38,10 +38,11 @@ class Tester:
     def post_process(value):
         if isinstance(value, str):
             value = value.replace("$", "").replace(",", "")
-            match = re.search(r"[-+]?\d*\.\d+|\d+", value)
+            match = re.search(r"[-+]?\d*\.?\d+", value)
             return float(match.group()) if match else 0
         else:
             return value
+
 
     def color_for(self, error, truth):
         if error < 40 or error / truth < 0.2:
@@ -201,6 +202,7 @@ class Tester:
         self.error_trend_chart()
         self.chart(title)
 
+
     def run(self):
         for i in tqdm(range(self.size)):
             title, guess, truth, error, color = self.run_datapoint(i)
@@ -210,8 +212,28 @@ class Tester:
             self.errors.append(error)
             self.colors.append(color)
             print(f"{COLOR_MAP[color]}${error:.0f} ", end="")
+    
         clear_output(wait=True)
+    
+        # Find the largest prediction errors
+        results = sorted(
+            zip(self.guesses, self.truths, self.errors, self.titles),
+            key=lambda x: x[2],
+            reverse=True
+        )
+    
+        print("\n\nTOP 10 LARGEST PREDICTION ERRORS")
+    
+        for guess, truth, error, title in results[:10]:
+            print(
+                f"Item: {title}\n"
+                f"Predicted: ${guess:,.2f}\n"
+                f"Actual: ${truth:,.2f}\n"
+                f"Error: ${error:,.2f}\n"
+            )
+    
         self.report()
+
 
 
 def evaluate(function, data, size=DEFAULT_SIZE):
